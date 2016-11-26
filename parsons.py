@@ -1,8 +1,12 @@
+#!/usr/bin/python3
+
 import discord
 import asyncio
 import random
+import sys
 
 client = discord.Client()
+recipients = []
 
 @client.event
 @asyncio.coroutine 
@@ -15,6 +19,8 @@ def on_ready():
 @client.event
 @asyncio.coroutine 
 def on_message(message):
+
+    # Quotes from Lucy Parsons, selected randomly
     if message.content.startswith('p!quote'):
         rnd = random.randint(1,4)
         if rnd == 1:
@@ -26,25 +32,51 @@ def on_message(message):
         if rnd == 4:
             yield from client.send_message(message.channel, 'Oh, Misery, I have drunk thy cup of sorrow to its dregs, but I am still a rebel.')
 
+    # Vouch for IWW member to be marked trusted.
     elif message.content.startswith('p!vouch'):
-        author = message.author
-        recipient = message.mentions[0]
 
+        author = message.author # The member currently vouching
+        recipient = message.mentions[0] # The member being vouched for
+
+        # Can't vouch for self
         if author.name == recipient.name:
             yield from client.send_message(message.channel, 'You can\'t vouch for yourself, ya goof!')
             return
 
+        # If the member is already in CNT they don't need to be vouched for
         for role in recipient.roles:
             if role.name == 'CNT':
                 yield from client.send_message(message.channel, 'Member is already CNT!')
                 return
 
+        # Check recipients list
+        recipient_dictionary = {'Name': '', 'Vouchers': []}
+
+        if len(recipients) > 0:
+            # do stuff
+            for dictionary in recipients:
+                if dictionary['Name'] == recipient.name:
+                    recipient_dictionary = dictionary
+        else:
+            recipient_dictionary['Name'] = recipient.name 
+            recipients.append(recipient_dictionary)
+
+        # If the voucher is in CNT then we can do work
         for role in author.roles:
             if role.name == 'CNT':
-                # do stuff
-                yield from client.send_message(message.channel, '+1 for ' + recipient.mention)
+                # Check that this member hasn't already vouched
+                if author.name in recipient_dictionary['Vouchers']:
+                    yield from client.send_message(message.channel, author.mention + ' has already vouched for ' + recipient.mention)
+                    return
+                else:
+                    recipient_dictionary['Vouchers'].append(author.name)
+                    yield from client.send_message(message.channel, author.mention + ' vouched for ' + recipient.mention)
+                    if len(recipient_dictionary['Vouchers']) == 1:
+                        # TODO: add CNT role to 'recipient' ; remove IWW role from 'recipient'
+                        yield from client.send_message(message.channel, recipient.mention + ' marked as trusted.')
                 return
 
+        # Otherwise the voucher is not in CNT and cannot vouch
         yield from client.send_message(message.channel, 'Sorry, only CNT can vouch for other members!') 
 
 client.run('token')
