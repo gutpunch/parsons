@@ -71,7 +71,7 @@ def on_message(message):
                 else:
                     recipient_dictionary['Vouchers'].append(author.name)
                     yield from client.send_message(message.channel, author.mention + ' vouched for ' + recipient.mention)
-                    if len(recipient_dictionary['Vouchers']) == 1:
+                    if len(recipient_dictionary['Vouchers']) == 2:
                         # TODO: add CNT role to 'recipient' ; remove IWW role from 'recipient'
                         yield from client.add_roles(recipient, role)
                         yield from client.send_message(message.channel, recipient.mention + ' marked as trusted.')
