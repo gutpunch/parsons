@@ -63,7 +63,7 @@ def on_message(message):
 
         # If the voucher is in CNT then we can do work
         for role in author.roles:
-            if role.name == 'CNT':
+            if role.name == 'CNT' or role.name == 'FAI':
                 # Check that this member hasn't already vouched
                 if author.name in recipient_dictionary['Vouchers']:
                     yield from client.send_message(message.channel, author.mention + ' has already vouched for ' + recipient.mention)
@@ -72,12 +72,17 @@ def on_message(message):
                     recipient_dictionary['Vouchers'].append(author.name)
                     yield from client.send_message(message.channel, author.mention + ' vouched for ' + recipient.mention)
                     if len(recipient_dictionary['Vouchers']) == 2:
-                        # TODO: add CNT role to 'recipient' ; remove IWW role from 'recipient'
-                        yield from client.add_roles(recipient, role)
+                        yield from client.add_roles(recipient, role)  
                         yield from client.send_message(message.channel, recipient.mention + ' marked as trusted.')
+                        # Remove IWW role
+                        old_role = {}
+                        for role2 in recipient.roles:
+                            if role2.name == 'IWW':
+                               old_role = role2 
+                        yield from client.remove_roles(recipient, old_role)
                 return
 
-        # Otherwise the voucher is not in CNT and cannot vouch
-        yield from client.send_message(message.channel, 'Sorry, only CNT can vouch for other members!') 
+        # Otherwise the voucher is not in CNT or FAI and cannot vouch
+        yield from client.send_message(message.channel, 'Sorry, only CNT/FAI can vouch for other members.') 
 
 client.run('token')
