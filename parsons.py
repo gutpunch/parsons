@@ -91,6 +91,7 @@ def on_message(message):
 
 
 def main(db_file="database.json"):
+    global recipients
     conf = toml.load("conf.toml")
     try:
         with open(db_file, 'r') as f:
