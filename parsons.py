@@ -1,11 +1,13 @@
 #!/usr/bin/python3
 
-import discord
 import asyncio
-import random
-import sys
 import json
 import os
+import random
+import sys
+
+import discord
+import toml
 
 client = discord.Client()
 recipients = []
@@ -84,7 +86,7 @@ def on_message(message):
 
 
 def main(db_file="database.json"):
-    token = 'token'
+    conf = toml.load("conf.toml")
     try:
         with open(db_file, 'r') as f:
             recipients = json.load(f)
@@ -93,7 +95,7 @@ def main(db_file="database.json"):
 
     loop = asyncio.get_event_loop()
     try:
-        loop.run_until_complete(client.start(token))
+        loop.run_until_complete(client.start(conf['token']))
     except KeyboardInterrupt:
         loop.run_until_complete(client.logout())    
         with open(db_file, 'w') as f:
