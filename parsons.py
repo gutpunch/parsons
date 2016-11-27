@@ -1,9 +1,13 @@
 #!/usr/bin/python3
 
-import discord
 import asyncio
+import json
+import os
 import random
 import sys
+
+import discord
+import toml
 
 client = discord.Client()
 recipients = []
@@ -85,4 +89,24 @@ def on_message(message):
         # Otherwise the voucher is not in CNT or FAI and cannot vouch
         yield from client.send_message(message.channel, 'Sorry, only CNT/FAI can vouch for other members.') 
 
-client.run('token')
+
+def main(db_file="database.json"):
+    conf = toml.load("conf.toml")
+    try:
+        with open(db_file, 'r') as f:
+            recipients = json.load(f)
+    except (json.decoder.JSONDecodeError, FileNotFoundError):
+        print("noot noot")
+
+    loop = asyncio.get_event_loop()
+    try:
+        loop.run_until_complete(client.start(conf['token']))
+    except KeyboardInterrupt:
+        loop.run_until_complete(client.logout())    
+        with open(db_file, 'w') as f:
+            json.dump(recipients, f)
+    finally:
+        loop.close()
+
+
+main()
