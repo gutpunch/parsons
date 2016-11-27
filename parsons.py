@@ -88,7 +88,7 @@ def main(db_file="database.json"):
     try:
         with open(db_file, 'r') as f:
             recipients = json.load(f)
-    except json.decoder.JSONDecodeError:
+    except (json.decoder.JSONDecodeError, FileNotFoundError):
         print("noot noot")
 
     loop = asyncio.get_event_loop()
