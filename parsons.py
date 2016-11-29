@@ -29,7 +29,7 @@ def on_message(message):
 			if role.name == "CNT" or role.name == "FAI":
 				can_vouch = True
 				break 
-	if can_vouch == true:
+	if can_vouch == True:
 		# can't vouch for self
 		if author.name == recipient.name:
 			yield from client.send_message(message.channel, "You can't vouch for yourself, ya goof!")
