@@ -65,8 +65,8 @@ def on_message(message):
 						old_role = role2
 						yield from client.remove_roles(recipient, old_role)
 						return
-		else:
-			yield from client.send_message(message.channel, "Sorry, only CNT/FAI can vouch for another member.")
+	else:
+		yield from client.send_message(message.channel, "Sorry, only CNT/FAI can vouch for another member.")
 
 def main(db_file="database.json"):
 	global recipients
