@@ -24,10 +24,10 @@ def on_message(message):
 	if message.content.startswith("p!vouch"):
 		author = message.author
 		recipient = message.mentions[0]
-		can_vouch = false
+		can_vouch = False
 		for role in author.roles:
 			if role.name == "CNT" or role.name == "FAI":
-				can_vouch = true
+				can_vouch = True
 				break 
 	if can_vouch == true:
 		# can't vouch for self
