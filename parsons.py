@@ -1,14 +1,24 @@
 #!/usr/bin/python3
 
 import discord
-import toml
 import asyncio
+import toml
 import json
 import os
 import random
 
+def get_role(name):
+	for server in client.servers:
+		for role in server.roles:
+			if role.name == name:
+				return role
+
 client = discord.Client()
 recipients = []
+
+role_iww = {}
+role_cnt = {}
+role_fai = {}
 
 @client.event
 @asyncio.coroutine
@@ -17,69 +27,67 @@ def on_ready():
 	print(client.user.name)
 	print(client.user.id)
 	print("------")
+	
+	global role_iww
+	global role_cnt
+	global role_fai
+	role_iww = get_role("IWW")
+	role_cnt = get_role("CNT")
+	role_fai = get_role("FAI")
 
 @client.event
 @asyncio.coroutine
 def on_message(message):
 	if message.content.startswith("p!vouch"):
+		global role_iww
+		global role_cnt
+		global role_fai
 		author = message.author
 		recipient = message.mentions[0]
-		can_vouch = False
-		for role in author.roles:
-			if role.name == "CNT" or role.name == "FAI":
-				can_vouch = True
-				break 
-	if can_vouch == True:
-		# can't vouch for self
-		if author.name == recipient.name:
-			yield from client.send_message(message.channel, "You can't vouch for yourself, ya goof!")
-			return
-	    
-		# if the member is already in CNT they don't need to be vouched for
-		for role in recipient.roles:
-			if role.name == "CNT":
-				yield from client.send_message(message.channel, recipient.mention + " is already CNT.")
-				return
+		recipient_dictionary = {"Name": "", "Vouchers": [], "Veto": False}
 	
-		# check recipients list
-		recipient_dictionary = {"Name": "", "Vouchers": []}
 		if len(recipients) > 0:
 			for dictionary in recipients:
 				if dictionary["Name"] == recipient.name:
 					recipient_dictionary = dictionary
-				else:
-					recipient_dictionary["Name"] = recipient.name
-					recipients.append(recipient_dictionary)
+		else:
+			recipient_dictionary["Name"] = recipient.name
+			recipients.append(recipient_dictionary)
+
+		if role_cnt in author.roles or role_fai in author.roles:
+			if author.name == recipient.name:
+				yield from client.send_message(message.channel, "You can't vouch for yourself, ya goof!")
+			
+			if role_cnt in recipient.roles:
+				yield from client.send_message(message.channel, "User is already CNT.")
+			if role_fai in recipient.roles:
+				yield from client.send_message(message.channel, "User is already FAI.")
+			
 			if author.name in recipient_dictionary["Vouchers"]:
 				yield from client.send_message(message.channel, author.mention + " has already vouched for " + recipient.mention)
 				return
 			else:
 				recipient_dictionary["Vouchers"].append(author.name)
 				yield from client.send_message(message.channel, author.mention + " vouched for " + recipient.mention)
-			if len(recipient_dictionary["Vouchers"]) == 2:
-				yield from client.add_roles(recipient, role)
-				yield from client.send_message(message.channel, recipient.mention + " marked as trusted.")
-				old_role = {}
-				for role2 in recipient.roles:
-					if role2.name == "IWW":
-						old_role = role2
-						yield from client.remove_roles(recipient, old_role)
-						return
-	else:
-		yield from client.send_message(message.channel, "Sorry, only CNT/FAI can vouch for another member.")
+				if len(recipient_dictionary["Vouchers"]) == 3:
+					yield from client.add_roles(recipient, role_cnt)
+					yield from client.send_message(message.channel, recipient.mention + " marked as trusted.")
+					yield from client.remove_roles(recipient, role_iww)
+		else:
+			yield from client.send_message(message.channel, "Sorry, only CNT/FAI can vouch for other users.")
 
 def main(db_file="database.json"):
 	global recipients
 	conf = toml.load("conf.toml")
 	try:
 		with open(db_file, 'r') as f:
-		    recipients = json.load(f)
+			recipients = json.load(f)
 	except (json.decoder.JSONDecodeError, FileNotFoundError):
 		print("noot noot")
 
 	loop = asyncio.get_event_loop()
 	try:
-		loop.run_until_complete(client.start(conf['token']))
+		loop.run_until_complete(client.start(conf["token"]))
 	except KeyboardInterrupt:
 		loop.run_until_complete(client.logout())
 		with open(db_file, 'w') as f:
