@@ -38,14 +38,15 @@ def on_ready():
 @client.event
 @asyncio.coroutine
 def on_message(message):
+	global role_iww
+	global role_cnt
+	global role_fai
+
 	if message.content.startswith("p!vouch"):
-		global role_iww
-		global role_cnt
-		global role_fai
 		author = message.author
 		recipient = message.mentions[0]
 		recipient_dictionary = {"Name": "", "Vouchers": [], "Veto": False}
-	
+
 		if len(recipients) > 0:
 			for dictionary in recipients:
 				if dictionary["Name"] == recipient.name:
@@ -54,27 +55,53 @@ def on_message(message):
 			recipient_dictionary["Name"] = recipient.name
 			recipients.append(recipient_dictionary)
 
-		if role_cnt in author.roles or role_fai in author.roles:
-			if author.name == recipient.name:
-				yield from client.send_message(message.channel, "You can't vouch for yourself, ya goof!")
-			
-			if role_cnt in recipient.roles:
-				yield from client.send_message(message.channel, "User is already CNT.")
-			if role_fai in recipient.roles:
-				yield from client.send_message(message.channel, "User is already FAI.")
-			
-			if author.name in recipient_dictionary["Vouchers"]:
-				yield from client.send_message(message.channel, author.mention + " has already vouched for " + recipient.mention)
-				return
+		if recipient_dictionary["Veto"] == False:
+			if role_cnt in author.roles or role_fai in author.roles:
+				if author.name == recipient.name:
+					yield from client.send_message(message.channel, "You can't vouch for yourself, ya goof!")
+				
+				if role_cnt in recipient.roles:
+					yield from client.send_message(message.channel, "User is already CNT.")
+				if role_fai in recipient.roles:
+					yield from client.send_message(message.channel, "User is already FAI.")
+				
+				if author.name in recipient_dictionary["Vouchers"]:
+					yield from client.send_message(message.channel, author.mention + " has already vouched for " + recipient.mention)
+					return
+				else:
+					recipient_dictionary["Vouchers"].append(author.name)
+					yield from client.send_message(message.channel, author.mention + " vouched for " + recipient.mention)
+					if len(recipient_dictionary["Vouchers"]) == 3:
+						yield from client.add_roles(recipient, role_cnt)
+						yield from client.send_message(message.channel, recipient.mention + " marked as trusted.")
+						yield from client.remove_roles(recipient, role_iww)
 			else:
-				recipient_dictionary["Vouchers"].append(author.name)
-				yield from client.send_message(message.channel, author.mention + " vouched for " + recipient.mention)
-				if len(recipient_dictionary["Vouchers"]) == 3:
-					yield from client.add_roles(recipient, role_cnt)
-					yield from client.send_message(message.channel, recipient.mention + " marked as trusted.")
-					yield from client.remove_roles(recipient, role_iww)
+				yield from client.send_message(message.channel, "Sorry, only CNT/FAI can vouch for other users.")
 		else:
-			yield from client.send_message(message.channel, "Sorry, only CNT/FAI can vouch for other users.")
+			yield from client.send_message(message.channel, recipient.mention + " has been vetoed from CNT approval and cannot claim vouchers.")		
+	elif message.content.startswith("p!veto"):
+		author = message.author
+		recipient = message.mentions[0]
+		recipient_dictionary = {"Name": "", "Vouchers": [], "Veto": False}
+
+		if len(recipients) > 0:
+			for dictionary in recipients:
+				if dictionary["Name"] == recipient.name:
+					recipient_dictionary = dictionary
+		else:
+			recipient_dictionary["Name"] = recipient.name
+			recipients.append(recipient_dictionary)
+
+		if role_fai in author.roles:
+			recipient_dictionary["Veto"] = not recipient_dictionary["Veto"]
+			if recipient_dictionary["Veto"] == True:
+				yield from client.send_message(message.channel, recipient.mention + " has been vetoed from CNT approval.")	
+			elif recipient_dictionary["Veto"] == False:
+				yield from client.send_message(message.channel, recipient.mention + " has been allowed CNT approval.")
+		else:
+			yield from client.send_message(message.channel, "Sorry, only FAI can veto users.")	
+
+
 
 def main(db_file="database.json"):
 	global recipients
