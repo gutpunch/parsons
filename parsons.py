@@ -71,10 +71,11 @@ def on_message(message):
 				else:
 					recipient_dictionary["Vouchers"].append(author.name)
 					yield from client.send_message(message.channel, author.mention + " vouched for " + recipient.mention)
-					if len(recipient_dictionary["Vouchers"]) == 3:
+					if len(recipient_dictionary["Vouchers"]) == 1:
 						yield from client.add_roles(recipient, role_cnt)
-						yield from client.send_message(message.channel, recipient.mention + " marked as trusted.")
+						pin = yield from client.send_message(message.channel, recipient.mention + " has been marked as trusted and added to CNT.")
 						yield from client.remove_roles(recipient, role_iww)
+						yield from client.pin_message(pin)
 			else:
 				yield from client.send_message(message.channel, "Sorry, only CNT/FAI can vouch for other users.")
 		else:
