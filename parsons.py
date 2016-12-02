@@ -43,6 +43,10 @@ def on_message(message):
 	global role_fai
 
 	if message.content.startswith("p!vouch"):
+		if len(message.mentions) == 0:
+			yield from client.send_message(message.channel, "Invalid syntax - command needs a user mention.")
+			return
+
 		author = message.author
 		recipient = message.mentions[0]
 		recipient_dictionary = {"Name": "", "Vouchers": [], "Veto": False}
@@ -59,11 +63,13 @@ def on_message(message):
 			if role_cnt in author.roles or role_fai in author.roles:
 				if author.name == recipient.name:
 					yield from client.send_message(message.channel, "You can't vouch for yourself, ya goof!")
-				
+					return	
 				if role_cnt in recipient.roles:
 					yield from client.send_message(message.channel, "User is already CNT.")
+					return
 				if role_fai in recipient.roles:
 					yield from client.send_message(message.channel, "User is already FAI.")
+					return
 				
 				if author.name in recipient_dictionary["Vouchers"]:
 					yield from client.send_message(message.channel, author.mention + " has already vouched for " + recipient.mention)
@@ -71,16 +77,22 @@ def on_message(message):
 				else:
 					recipient_dictionary["Vouchers"].append(author.name)
 					yield from client.send_message(message.channel, author.mention + " vouched for " + recipient.mention)
-					if len(recipient_dictionary["Vouchers"]) == 1:
+					if len(recipient_dictionary["Vouchers"]) == 3:
 						yield from client.add_roles(recipient, role_cnt)
 						pin = yield from client.send_message(message.channel, recipient.mention + " has been marked as trusted and added to CNT.")
 						yield from client.remove_roles(recipient, role_iww)
 						yield from client.pin_message(pin)
+					return
 			else:
 				yield from client.send_message(message.channel, "Sorry, only CNT/FAI can vouch for other users.")
+				return
 		else:
 			yield from client.send_message(message.channel, recipient.mention + " has been vetoed from CNT approval and cannot claim vouchers.")		
 	elif message.content.startswith("p!veto"):
+		if len(message.mentions) == 0:
+			yield from client.send_message(message.channel, "Invalid syntax - command needs a user mention.")
+			return
+
 		author = message.author
 		recipient = message.mentions[0]
 		recipient_dictionary = {"Name": "", "Vouchers": [], "Veto": False}
@@ -94,14 +106,18 @@ def on_message(message):
 			recipients.append(recipient_dictionary)
 
 		if role_fai in author.roles:
-			recipient_dictionary["Veto"] = not recipient_dictionary["Veto"]
-			if recipient_dictionary["Veto"] == True:
+			if recipient_dictionary["Veto"] == False:
+				recipient_dictionary["Veto"] = True
 				yield from client.send_message(message.channel, recipient.mention + " has been vetoed from CNT approval.")	
-			elif recipient_dictionary["Veto"] == False:
+				recipient_dictionary["Vouchers"].clear()
+				return
+			elif recipient_dictionary["Veto"] == True:
+				recipient_dictionary["Veto"] = False
 				yield from client.send_message(message.channel, recipient.mention + " has been allowed CNT approval.")
+				return
 		else:
-			yield from client.send_message(message.channel, "Sorry, only FAI can veto users.")	
-
+			yield from client.send_message(message.channel, "Sorry, only FAI can veto users.")
+			return
 
 
 def main(db_file="database.json"):
