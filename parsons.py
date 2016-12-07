@@ -42,7 +42,7 @@ def on_message(message):
 	global role_cnt
 	global role_fai
 
-	if message.content.startswith("p!vouch"):
+	if message.content.startswith("p!vouch "):
 		if len(message.mentions) == 0:
 			yield from client.send_message(message.channel, "Invalid syntax - command needs a user mention.")
 			return
@@ -88,7 +88,7 @@ def on_message(message):
 				return
 		else:
 			yield from client.send_message(message.channel, recipient.mention + " has been vetoed from CNT approval and cannot claim vouchers.")		
-	elif message.content.startswith("p!veto"):
+	elif message.content.startswith("p!veto "):
 		if len(message.mentions) == 0:
 			yield from client.send_message(message.channel, "Invalid syntax - command needs a user mention.")
 			return
@@ -110,6 +110,9 @@ def on_message(message):
 				recipient_dictionary["Veto"] = True
 				yield from client.send_message(message.channel, recipient.mention + " has been vetoed from CNT approval.")	
 				recipient_dictionary["Vouchers"].clear()
+				if role_cnt in recipient.roles:
+					yield from client.remove_roles(recipient, role_cnt)
+					yield from client.add_roles(recipient, role_iww)
 				return
 			elif recipient_dictionary["Veto"] == True:
 				recipient_dictionary["Veto"] = False
@@ -118,7 +121,8 @@ def on_message(message):
 		else:
 			yield from client.send_message(message.channel, "Sorry, only FAI can veto users.")
 			return
-
+	elif message.content.startswith("p!tag "):
+		print("noot noot")
 
 def main(db_file="database.json"):
 	global recipients
