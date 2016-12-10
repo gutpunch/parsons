@@ -34,9 +34,9 @@ def on_message(message):
 	global role_iww
 	global role_cnt
 	global role_fai
-        role_iww = get_role("IWW")
-        role_cnt = get_role("CNT")
-        role_fai = get_role("FAI")
+	role_iww = get_role("IWW")
+	role_cnt = get_role("CNT")
+	role_fai = get_role("FAI")
 
 	if message.content.startswith("p!vouch "):
 		if len(message.mentions) == 0:
